@@ -1,0 +1,42 @@
+[package]
+name = "tracing-cloudwatch"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "tracing-subscriber layer that sends your application's tracing events(logs) to AWS CloudWatch Logs"
+repository = "https://github.com/ymgyt/tracing-cloudwatch"
+readme = "README.md"
+keywords = ["tracing", "aws", "cloudwatch"]
+categories = ["development-tools::debugging"]
+
+[features]
+default = []
+rusoto = ["rusoto_logs", "rusoto_core"]
+
+[dependencies]
+anyhow = "1.0.71"
+async-trait = "0.1.68"
+chrono = "0.4.24"
+rusoto_core = { version = "0.48.0", optional = true }
+rusoto_logs = { version = "0.48.0", optional = true }
+thiserror = "1.0.40"
+tokio = { version = "1.28", features = ["rt", "sync", "time", "macros"] }
+tracing = { version = "0.1.35", default-features = false, features = ["std"] }
+tracing-core = "0.1.30"
+tracing-subscriber = { version = "0.3.17", default-features = false, features = [
+  "std",
+  "fmt",
+  "smallvec",
+] }
+
+[dev-dependencies]
+rusoto_core = "0.48.0"
+rusoto_logs = "0.48.0"
+tokio = { version = "1.28.0", features = [
+  "rt",
+  "rt-multi-thread",
+  "macros",
+  "time",
+] }
+tracing = "0.1.37"
+tracing-subscriber = "0.3.17"

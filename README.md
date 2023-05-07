@@ -9,10 +9,7 @@ tracing-cloudwatch is a custom tracing-subscriber layer that sends your applicat
 feature `rusoto` required
 
 ```rust
-use std::time::Duration;
-
 use rusoto_core::Region;
-use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
@@ -33,13 +30,11 @@ async fn main() {
         .init();
 
     start().await;
-
-    tokio::time::sleep(Duration::from_secs(5)).await;
 }
 
 #[tracing::instrument()]
 async fn start() {
-    info!("Starting...");
+    tracing::info!("Starting...");
 }
 ```
 

@@ -3,7 +3,6 @@
 async fn main() {
     use rusoto_core::Region;
     use std::time::Duration;
-    use tracing::info;
     use tracing_subscriber::{filter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
     let cw_client = rusoto_logs::CloudWatchLogsClient::new(Region::ApNortheast1);
 

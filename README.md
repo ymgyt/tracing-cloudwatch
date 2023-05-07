@@ -50,8 +50,6 @@ async fn main() {
     let cw_client = aws_sdk_cloudwatchlogs::Client::new(&config);
 
     tracing_subscriber::registry::Registry::default()
-        .with(fmt::layer().with_ansi(true))
-        .with(filter::LevelFilter::INFO)
         .with(
             tracing_cloudwatch::layer().with_client(
                 cw_client,

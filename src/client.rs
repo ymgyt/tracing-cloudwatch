@@ -1,6 +1,9 @@
 #[cfg(feature = "rusoto")]
 mod rusoto;
 
+#[cfg(feature = "awssdk")]
+mod awssdk;
+
 use async_trait::async_trait;
 
 use crate::{dispatch::LogEvent, export::LogDestination};

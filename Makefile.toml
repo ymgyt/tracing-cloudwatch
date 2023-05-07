@@ -1,0 +1,21 @@
+[tasks.lint]
+command = "cargo"
+args = ["clippy", "--all-features"]
+dependencies = ["check:fmt", "check:sort"]
+
+[tasks."check:fmt"]
+description = "Check format"
+command = "cargo"
+args = ["fmt", "--check"]
+
+[tasks."check:sort"]
+description = "Check if Cargo.toml dependencies sorted"
+install_crate = { crate_name = "cargo-sort" }
+command = "cargo"
+args = ["sort", "--check"]
+
+[tasks.test]
+description = "Run nextest"
+install_crate = { crate_name = "cargo-nextest" }
+command = "cargo"
+args = ["nextest", "run", "--all-features"]

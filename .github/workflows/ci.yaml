@@ -1,0 +1,24 @@
+name: ci
+on: 
+  pull_request:
+    types: ["opened", "synchronize"]
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: dtolnay/rust-toolchain@stable
+    - uses: davidB/rust-cargo-make@v1
+    - uses: actions-rs/install@master
+      with:
+        crate: cargo-sort
+        use-tool-cache: true
+    - uses: actions-rs/install@master
+      with:
+        crate: cargo-nextest
+        use-tool-cache: true
+    - run: cargo make lint
+    - run: cargo make test
+    

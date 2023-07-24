@@ -3,6 +3,12 @@ on:
     tags:
       - 'v*.*.*'
 
+# We need contents write permission to create release
+# https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#permissions
+# https://github.com/taiki-e/upload-rust-binary-action/issues/15#issuecomment-1141252687
+permissions:
+  contents: write
+
 name: cd
 
 jobs:

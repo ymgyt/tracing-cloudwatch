@@ -21,7 +21,7 @@ async fn main() {
                 cw_client,
                 tracing_cloudwatch::ExportConfig::default()
                     .with_batch_size(5)
-                    .with_interval(Duration::from_secs(1))
+                    .with_interval(std::time::Duration::from_secs(1))
                     .with_log_group_name("tracing-cloudwatch")
                     .with_log_stream_name("stream-1"),
             ),
@@ -48,7 +48,7 @@ async fn main() {
                 cw_client,
                 tracing_cloudwatch::ExportConfig::default()
                     .with_batch_size(5)
-                    .with_interval(Duration::from_secs(1))
+                    .with_interval(std::time::Duration::from_secs(1))
                     .with_log_group_name("tracing-cloudwatch")
                     .with_log_stream_name("stream-1"),
             ),

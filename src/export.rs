@@ -6,16 +6,23 @@ use tokio::{sync::mpsc::UnboundedReceiver, time::interval};
 
 use crate::{client::NoopClient, dispatch::LogEvent, CloudWatchClient};
 
+/// Configurations to control the behavior of exporting logs to CloudWatch.
 #[derive(Debug, Clone)]
 pub struct ExportConfig {
+    /// The number of logs to retain in the buffer within the interval period.
     batch_size: NonZeroUsize,
+    /// The interval for putting logs.
     interval: Duration,
+    /// To which logs sended.
     destination: LogDestination,
 }
 
+/// To which logs to sended.
 #[derive(Debug, Clone, Default)]
 pub struct LogDestination {
+    /// The name of the log group.
     pub log_group_name: String,
+    /// The name of the log stream.
     pub log_stream_name: String,
 }
 
@@ -30,6 +37,7 @@ impl Default for ExportConfig {
 }
 
 impl ExportConfig {
+    /// Set batch size.
     pub fn with_batch_size<T>(self, batch_size: T) -> Self
     where
         T: TryInto<NonZeroUsize>,
@@ -43,10 +51,12 @@ impl ExportConfig {
         }
     }
 
+    /// Set export interval.
     pub fn with_interval(self, interval: Duration) -> Self {
         Self { interval, ..self }
     }
 
+    /// Set log group name.
     pub fn with_log_group_name(self, log_group_name: impl Into<String>) -> Self {
         Self {
             destination: LogDestination {
@@ -57,6 +67,7 @@ impl ExportConfig {
         }
     }
 
+    /// Set log stream name.
     pub fn with_log_stream_name(self, log_stream_name: impl Into<String>) -> Self {
         Self {
             destination: LogDestination {
@@ -126,7 +137,7 @@ where
 
             if let Err(err) = client.put_logs(config.destination.clone(), logs).await {
                 eprintln!(
-                    "[tracing-cloudwatch] Unable to put logs to cloudwatch. Error: {err} {:?}",
+                    "[tracing-cloudwatch] Unable to put logs to cloudwatch. Error: {err:?} {:?}",
                     config.destination
                 );
             }

@@ -1,6 +1,6 @@
 //!  tracing-cloudwatch is a custom tracing-subscriber layer that sends your application's tracing events(logs) to AWS CloudWatch Logs.  
 //!
-//! Currently, we have supported [rusoto](https://github.com/rusoto/rusoto) and the [AWS SDK](https://github.com/awslabs/aws-sdk-rust) as AWS clients.
+//! We have supported [rusoto](https://github.com/rusoto/rusoto) and the [AWS SDK](https://github.com/awslabs/aws-sdk-rust) as AWS clients.
 //!
 //! ## Usage
 //!
@@ -69,7 +69,7 @@
 //!
 //! ## Retry and Timeout
 //!
-//! Currently, we haven't implemented any custom retry logic or timeout settings within the crate. We assume that these configurations are handled through the SDK Client.
+//! We haven't implemented any custom retry logic or timeout settings within the crate. We assume that these configurations are handled through the SDK Client.
 //! For instance, in the AWS SDK, you can set up these configurations using [`timeout_config`](https://docs.rs/aws-sdk-cloudwatchlogs/0.28.0/aws_sdk_cloudwatchlogs/config/struct.Builder.html#method.timeout_config) and [`retry_config`](https://docs.rs/aws-sdk-cloudwatchlogs/0.28.0/aws_sdk_cloudwatchlogs/config/struct.Builder.html#method.retry_config)
 
 mod client;

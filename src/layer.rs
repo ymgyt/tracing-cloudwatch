@@ -19,6 +19,7 @@ pub struct CloudWatchLayer<S, D> {
     fmt_layer: fmt::Layer<S, format::DefaultFields, format::Format<format::Full, ()>, Arc<D>>,
 }
 
+/// Construct [CloudWatchLayer] to compose with tracing subscriber.
 pub fn layer<S>() -> CloudWatchLayer<S, NoopDispatcher>
 where
     S: Subscriber + for<'span> LookupSpan<'span>,
@@ -49,10 +50,12 @@ where
                 .with_ansi(false)
                 .with_level(true)
                 .with_line_number(true)
-                .with_file(true),
+                .with_file(true)
+                .with_target(false),
         }
     }
 
+    /// Set client.
     pub fn with_client<Client>(
         self,
         client: Client,
@@ -68,12 +71,16 @@ where
         }
     }
 
+    /// Configure to display line number and filename.
+    /// Default true
     pub fn with_code_location(self, display: bool) -> Self {
         Self {
             fmt_layer: self.fmt_layer.with_line_number(display).with_file(display),
         }
     }
 
+    /// Configure to display target module.
+    /// Default false.
     pub fn with_target(self, display: bool) -> Self {
         Self {
             fmt_layer: self.fmt_layer.with_target(display),

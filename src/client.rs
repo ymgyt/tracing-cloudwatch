@@ -8,6 +8,7 @@ use async_trait::async_trait;
 
 use crate::{dispatch::LogEvent, export::LogDestination};
 
+/// Trait that abstracts API call using the SDK.
 #[async_trait]
 pub trait CloudWatchClient {
     async fn put_logs(&self, dest: LogDestination, logs: Vec<LogEvent>)

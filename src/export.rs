@@ -133,7 +133,7 @@ where
                 }
             }
 
-            let logs = queue.drain(..).collect();
+            let logs = std::mem::take(&mut queue);
 
             if let Err(err) = client.put_logs(config.destination.clone(), logs).await {
                 eprintln!(

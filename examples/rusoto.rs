@@ -1,4 +1,4 @@
-#[cfg(feature = "rusoto")]
+#[cfg(any(feature = "rusoto", feature = "rusoto_rustls"))]
 #[tokio::main]
 async fn main() {
     use rusoto_core::Region;
@@ -26,7 +26,7 @@ async fn main() {
     tokio::time::sleep(Duration::from_secs(5)).await;
 }
 
-#[cfg(not(feature = "rusoto"))]
+#[cfg(all(not(feature = "rusoto"), not(feature = "rusoto_rustls")))]
 fn main() {}
 
 #[tracing::instrument()]

@@ -1,4 +1,4 @@
-#[cfg(feature = "rusoto")]
+#[cfg(any(feature = "rusoto", feature = "rusoto_rustls"))]
 mod rusoto;
 
 #[cfg(feature = "awssdk")]

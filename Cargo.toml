@@ -11,7 +11,8 @@ categories = ["development-tools::debugging"]
 
 [features]
 default = []
-rusoto = ["rusoto_logs", "rusoto_core"]
+rusoto = ["rusoto_logs/default", "rusoto_core/default"]
+rusoto_rustls = ["rusoto_logs/rustls", "rusoto_core/rustls"]
 awssdk = ["aws-sdk-cloudwatchlogs"]
 
 [dependencies]
@@ -19,8 +20,8 @@ anyhow = "1.0"
 async-trait = "0.1"
 aws-sdk-cloudwatchlogs = { version = "0.31", default-features = false, optional = true }
 chrono = "0.4"
-rusoto_core = { version = "0.48", optional = true }
-rusoto_logs = { version = "0.48", optional = true }
+rusoto_core = { version = "0.48", default-features = false, optional = true }
+rusoto_logs = { version = "0.48", default-features = false, optional = true }
 thiserror = "1.0"
 tokio = { version = "1", features = ["rt", "sync", "time", "macros"] }
 tracing = { version = "0.1", default-features = false, features = ["std"] }
@@ -33,9 +34,6 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 
 [dev-dependencies]
 aws-config = "0.56"
-aws-sdk-cloudwatchlogs = { version = "0.31.0" }
-rusoto_core = "0.48.0"
-rusoto_logs = "0.48.0"
 tokio = { version = "1.28.0", features = [
   "rt",
   "rt-multi-thread",

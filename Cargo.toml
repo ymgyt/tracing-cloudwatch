@@ -18,7 +18,7 @@ awssdk = ["aws-sdk-cloudwatchlogs"]
 [dependencies]
 anyhow = "1.0"
 async-trait = "0.1"
-aws-sdk-cloudwatchlogs = { version = "0.34", default-features = false, optional = true }
+aws-sdk-cloudwatchlogs = { version = "1.9", default-features = false, optional = true }
 chrono = "0.4"
 rusoto_core = { version = "0.48", default-features = false, optional = true }
 rusoto_logs = { version = "0.48", default-features = false, optional = true }

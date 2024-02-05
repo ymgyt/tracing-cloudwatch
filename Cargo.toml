@@ -1,6 +1,6 @@
 [package]
 name = "tracing-cloudwatch"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 license = "MIT"
 description = "tracing-subscriber layer that sends your application's tracing events(logs) to AWS CloudWatch Logs"
@@ -18,7 +18,7 @@ awssdk = ["aws-sdk-cloudwatchlogs"]
 [dependencies]
 anyhow = "1.0"
 async-trait = "0.1"
-aws-sdk-cloudwatchlogs = { version = "0.34", default-features = false, optional = true }
+aws-sdk-cloudwatchlogs = { version = "1", default-features = false, optional = true }
 chrono = "0.4"
 rusoto_core = { version = "0.48", default-features = false, optional = true }
 rusoto_logs = { version = "0.48", default-features = false, optional = true }

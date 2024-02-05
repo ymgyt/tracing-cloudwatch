@@ -1,6 +1,8 @@
 use async_trait::async_trait;
 use aws_sdk_cloudwatchlogs::{
-    error::SdkError, operation::put_log_events::PutLogEventsError, types::InputLogEvent,
+    error::{BuildError, SdkError},
+    operation::put_log_events::PutLogEventsError,
+    types::InputLogEvent,
     Client as SdkClient,
 };
 
@@ -16,7 +18,11 @@ impl CloudWatchClient for SdkClient {
         dest: LogDestination,
         logs: Vec<LogEvent>,
     ) -> Result<(), PutLogsError> {
-        let log_events = logs.into_iter().map(From::from).collect();
+        let log_events = logs
+            .into_iter()
+            .map(TryFrom::try_from)
+            .collect::<Result<Vec<_>, BuildError>>()
+            .map_err(|err| PutLogsError::Other(err.into()))?;
 
         match self
             .put_log_events()
@@ -45,8 +51,10 @@ impl CloudWatchClient for SdkClient {
     }
 }
 
-impl From<LogEvent> for InputLogEvent {
-    fn from(value: LogEvent) -> Self {
+impl TryFrom<LogEvent> for InputLogEvent {
+    type Error = BuildError;
+
+    fn try_from(value: LogEvent) -> Result<Self, Self::Error> {
         InputLogEvent::builder()
             .timestamp(value.timestamp.timestamp_millis())
             .message(value.message)

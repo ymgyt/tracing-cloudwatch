@@ -6,16 +6,17 @@ We have supported [rusoto](https://github.com/rusoto/rusoto) and the [AWS SDK](h
 
 ## Usage
 
-### With Rusoto
+### With AWS SDK
 
-feature `rusoto` required
+feature `awssdk` required
 
 ```rust
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
 async fn main() {
-    let cw_client = rusoto_logs::CloudWatchLogsClient::new(rusoto_core::Region::ApNortheast1);
+    let config = aws_config::load_from_env().await;
+    let cw_client = aws_sdk_cloudwatchlogs::Client::new(&config);
 
     tracing_subscriber::registry::Registry::default()
         .with(
@@ -34,17 +35,16 @@ async fn main() {
 }
 ```
 
-### With AWS SDK
+### With Rusoto
 
-feature `awssdk` required
+feature `rusoto` required
 
 ```rust
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
 async fn main() {
-    let config = aws_config::load_from_env().await;
-    let cw_client = aws_sdk_cloudwatchlogs::Client::new(&config);
+    let cw_client = rusoto_logs::CloudWatchLogsClient::new(rusoto_core::Region::ApNortheast1);
 
     tracing_subscriber::registry::Registry::default()
         .with(

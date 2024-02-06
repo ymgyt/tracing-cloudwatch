@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.5] - 2024-02-06
 ### Changed
-- update aws-sdk-cloudwatchlogs version from 0.34 to 1
+- update aws-sdk-cloudwatchlogs version from 0.34 to 1 https://github.com/ymgyt/tracing-cloudwatch/pull/34
 
 ## [0.1.4] - 2023-10-19
 ### Added

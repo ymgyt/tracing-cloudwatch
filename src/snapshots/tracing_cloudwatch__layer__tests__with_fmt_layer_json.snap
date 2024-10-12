@@ -1,0 +1,5 @@
+---
+source: src/layer.rs
+expression: dispatched.message
+---
+"{\"level\":\"INFO\",\"fields\":{\"message\":\"Hello!\"},\"target\":\"tracing_cloudwatch::layer::tests\",\"span\":{\"key\":\"value\",\"name\":\"span-2\"},\"spans\":[{\"xxx\":\"yyy\",\"name\":\"span-1\"},{\"key\":\"value\",\"name\":\"span-2\"}]}\n"

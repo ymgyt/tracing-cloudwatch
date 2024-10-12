@@ -1,6 +1,6 @@
 [package]
 name = "tracing-cloudwatch"
-version = "0.1.5"
+version = "0.2.0"
 edition = "2021"
 license = "MIT"
 description = "tracing-subscriber layer that sends your application's tracing events(logs) to AWS CloudWatch Logs"
@@ -34,7 +34,6 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 
 [dev-dependencies]
 aws-config = "1"
-insta = "1.40.0"
 tokio = { version = "1.28.0", features = [
   "rt",
   "rt-multi-thread",
@@ -43,3 +42,4 @@ tokio = { version = "1.28.0", features = [
 ] }
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["json"] }
+insta = "1.40.0"

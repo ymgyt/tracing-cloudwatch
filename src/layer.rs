@@ -15,8 +15,8 @@ use crate::{
 };
 
 /// An AWS Cloudwatch propagation layer.
-pub struct CloudWatchLayer<S, D> {
-    fmt_layer: fmt::Layer<S, format::DefaultFields, format::Format<format::Full, ()>, Arc<D>>,
+pub struct CloudWatchLayer<S, D, N = format::DefaultFields, E = format::Format<format::Full, ()>> {
+    fmt_layer: fmt::Layer<S, N, E, Arc<D>>,
 }
 
 /// Construct [CloudWatchLayer] to compose with tracing subscriber.
@@ -27,16 +27,17 @@ where
     CloudWatchLayer::default()
 }
 
-impl<S> Default for CloudWatchLayer<S, NoopDispatcher>
+impl<S> Default
+    for CloudWatchLayer<S, NoopDispatcher, format::DefaultFields, format::Format<format::Full, ()>>
 where
     S: Subscriber + for<'span> LookupSpan<'span>,
 {
     fn default() -> Self {
-        CloudWatchLayer::new(Arc::new(NoopDispatcher::new()))
+        CloudWatchLayer::<S,NoopDispatcher, format::DefaultFields, format::Format<format::Full,()>>::new(Arc::new(NoopDispatcher::new()))
     }
 }
 
-impl<S, D> CloudWatchLayer<S, D>
+impl<S, D> CloudWatchLayer<S, D, format::DefaultFields, format::Format<format::Full, ()>>
 where
     S: Subscriber + for<'span> LookupSpan<'span>,
     D: Dispatcher + 'static,
@@ -54,23 +55,12 @@ where
                 .with_target(false),
         }
     }
+}
 
-    /// Set client.
-    pub fn with_client<Client>(
-        self,
-        client: Client,
-        export_config: ExportConfig,
-    ) -> CloudWatchLayer<S, CloudWatchDispatcher>
-    where
-        Client: CloudWatchClient + Send + Sync + 'static,
-    {
-        CloudWatchLayer {
-            fmt_layer: self
-                .fmt_layer
-                .with_writer(Arc::new(CloudWatchDispatcher::new(client, export_config))),
-        }
-    }
-
+impl<S, D, N, L, T> CloudWatchLayer<S, D, N, format::Format<L, T>>
+where
+    N: for<'writer> fmt::FormatFields<'writer> + 'static,
+{
     /// Configure to display line number and filename.
     /// Default true
     pub fn with_code_location(self, display: bool) -> Self {
@@ -88,11 +78,49 @@ where
     }
 }
 
-impl<S, D> Layer<S> for CloudWatchLayer<S, D>
+impl<S, D, N, E> CloudWatchLayer<S, D, N, E>
 where
     S: Subscriber + for<'span> LookupSpan<'span>,
     D: Dispatcher + 'static,
     Arc<D>: for<'writer> MakeWriter<'writer>,
+{
+    /// Set client.
+    pub fn with_client<Client>(
+        self,
+        client: Client,
+        export_config: ExportConfig,
+    ) -> CloudWatchLayer<S, CloudWatchDispatcher, N, E>
+    where
+        Client: CloudWatchClient + Send + Sync + 'static,
+    {
+        CloudWatchLayer {
+            fmt_layer: self
+                .fmt_layer
+                .with_writer(Arc::new(CloudWatchDispatcher::new(client, export_config))),
+        }
+    }
+
+    /// Set the [`fmt::Layer`] provided as an argument.
+    /// You can control the log format for CloudWatch by setting a pre-configured [`fmt::Layer`]
+    /// However, the specification of the writer will be overrided.
+    pub fn with_fmt_layer<N2, E2, W>(
+        self,
+        fmt_layer: fmt::Layer<S, N2, E2, W>,
+    ) -> CloudWatchLayer<S, D, N2, E2> {
+        let writer = self.fmt_layer.writer().clone();
+        CloudWatchLayer {
+            fmt_layer: fmt_layer.with_writer(writer),
+        }
+    }
+}
+
+impl<S, D, N, E> Layer<S> for CloudWatchLayer<S, D, N, E>
+where
+    S: Subscriber + for<'span> LookupSpan<'span>,
+    D: Dispatcher + 'static,
+    Arc<D>: for<'writer> MakeWriter<'writer>,
+    N: for<'writer> format::FormatFields<'writer> + 'static,
+    E: format::FormatEvent<S, N> + 'static,
 {
     fn on_enter(&self, id: &span::Id, ctx: Context<'_, S>) {
         self.fmt_layer.on_enter(id, ctx)
@@ -217,5 +245,25 @@ mod tests {
 
         let dispatched = dispatcher.events.lock().unwrap().remove(0);
         assert_eq!(dispatched.message, "ERROR Error\n");
+    }
+
+    #[test]
+    fn with_fmt_layer_json() {
+        let dispatcher = Arc::new(TestDispatcher::new());
+        let subscriber = tracing_subscriber::registry().with(
+            CloudWatchLayer::new(dispatcher.clone())
+                .with_fmt_layer(fmt::layer().json().without_time()),
+        );
+
+        tracing::subscriber::with_default(subscriber, || {
+            tracing::info_span!("span-1", xxx = "yyy").in_scope(|| {
+                tracing::debug_span!("span-2", key = "value").in_scope(|| {
+                    tracing::info!("Hello!");
+                })
+            });
+        });
+
+        let dispatched = dispatcher.events.lock().unwrap().remove(0);
+        insta::assert_debug_snapshot!(dispatched.message);
     }
 }

@@ -39,7 +39,7 @@
 //!
 //! #[tokio::main]
 //! async fn main() {
-//!     let config = aws_config::load_from_env().await;
+//!     let config = aws_config::load_defaults(aws_config::BehaviorVersion::latest()).await;
 //!     let cw_client = aws_sdk_cloudwatchlogs::Client::new(&config);
 //!
 //!     tracing_subscriber::registry::Registry::default()

@@ -1,9 +1,10 @@
 #[cfg(feature = "awssdk")]
 #[tokio::main]
 async fn main() {
+    use aws_config::BehaviorVersion;
     use std::time::Duration;
     use tracing_subscriber::{filter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
-    let config = aws_config::load_from_env().await;
+    let config = aws_config::load_defaults(BehaviorVersion::latest()).await;
     let cw_client = aws_sdk_cloudwatchlogs::Client::new(&config);
 
     tracing_subscriber::registry::Registry::default()

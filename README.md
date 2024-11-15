@@ -1,6 +1,6 @@
 # tracing-cloudwatch
 
-tracing-cloudwatch is a custom tracing-subscriber layer that sends your application's tracing events(logs) to AWS CloudWatch Logs.  
+tracing-cloudwatch is a custom tracing-subscriber layer that sends your application's tracing events(logs) to AWS CloudWatch Logs.
 
 We have supported [rusoto](https://github.com/rusoto/rusoto) and the [AWS SDK](https://github.com/awslabs/aws-sdk-rust) as AWS clients.
 
@@ -34,6 +34,12 @@ async fn main() {
         .init();
 }
 ```
+
+#### Chronological order
+
+When aggregating logs from multiple places (or integrations such as [tracing-gstreamer](https://crates.io/crates/tracing-gstreamer)), messages can become unordered. This causes a `InvalidParameterException: Log events in a single PutLogEvents request must be in chronological order.` error from the CloudWatch client. To mediate this, you may enable the `ordered_logs` feature. Take into consideration that this can possibly increase processing time significantly depending on the number of events in the batch. Your milage may vary!
+
+There is some additional context in https://github.com/ymgyt/tracing-cloudwatch/issues/40
 
 ### With Rusoto
 
@@ -84,7 +90,7 @@ tracing_subscriber::registry::Registry::default()
 
 Currently, following AWS IAM Permissions required
 
-* `logs:PutLogEvents`
+- `logs:PutLogEvents`
 
 ## CloudWatch Log Groups and Streams
 
@@ -94,7 +100,6 @@ This crate does not create a log group and log stream, so if the specified log g
 
 We haven't implemented any custom retry logic or timeout settings within the crate. We assume that these configurations are handled through the SDK Client.  
 For instance, in the AWS SDK, you can set up these configurations using [`timeout_config`](https://docs.rs/aws-sdk-cloudwatchlogs/0.28.0/aws_sdk_cloudwatchlogs/config/struct.Builder.html#method.timeout_config) and [`retry_config`](https://docs.rs/aws-sdk-cloudwatchlogs/0.28.0/aws_sdk_cloudwatchlogs/config/struct.Builder.html#method.retry_config)
-
 
 ## License
 

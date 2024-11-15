@@ -2,11 +2,11 @@
 command = "cargo"
 args = ["clippy"]
 dependencies = [
-    "check:fmt",
-    "check:sort",
-    "lint:rusoto",
-    "lint:rusoto_rustls",
-    "lint:awssdk",
+  "check:fmt",
+  "check:sort",
+  "lint:rusoto",
+  "lint:rusoto_rustls",
+  "lint:awssdk",
 ]
 
 [tasks."lint:rusoto"]
@@ -37,7 +37,12 @@ description = "Run nextest"
 install_crate = { crate_name = "cargo-nextest" }
 command = "cargo"
 args = ["nextest", "run"]
-dependencies = ["test:rusoto", "test:rusoto_rustls", "test:awssdk"]
+dependencies = [
+  "test:rusoto",
+  "test:rusoto_rustls",
+  "test:awssdk",
+  "test:ordered_logs",
+]
 
 [tasks."test:rusoto"]
 command = "cargo"
@@ -46,13 +51,17 @@ args = ["nextest", "run", "--no-default-features", "--features", "rusoto"]
 [tasks."test:rusoto_rustls"]
 command = "cargo"
 args = [
-    "nextest",
-    "run",
-    "--no-default-features",
-    "--features",
-    "rusoto_rustls",
+  "nextest",
+  "run",
+  "--no-default-features",
+  "--features",
+  "rusoto_rustls",
 ]
 
 [tasks."test:awssdk"]
 command = "cargo"
 args = ["nextest", "run", "--no-default-features", "--features", "awssdk"]
+
+[tasks."test:ordered_logs"]
+command = "cargo"
+args = ["nextest", "run", "--no-default-features", "--features", "ordered_logs"]

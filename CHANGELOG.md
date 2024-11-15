@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2024-11-15
+### Added
+- add `ordered_logs` feature to handle chronological order in logs https://github.com/ymgyt/tracing-cloudwatch/pull/41
+
 ## [0.2.0] - 2024-10-12
 ### Added
 - add `with_fmt_layer` method https://github.com/ymgyt/tracing-cloudwatch/pull/39

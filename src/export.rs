@@ -133,7 +133,7 @@ where
                 }
             }
 
-            let logs = std::mem::take(&mut queue);
+            let logs: Vec<LogEvent> = Self::take_from_queue(&mut queue);
 
             if let Err(err) = client.put_logs(config.destination.clone(), logs).await {
                 eprintln!(
@@ -141,6 +141,101 @@ where
                     config.destination
                 );
             }
+        }
+    }
+
+    fn take_from_queue(queue: &mut Vec<LogEvent>) -> Vec<LogEvent> {
+        if cfg!(feature = "ordered_logs") {
+            let mut logs = std::mem::take(queue);
+            logs.sort_by_key(|log| log.timestamp);
+            logs
+        } else {
+            std::mem::take(queue)
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::{DateTime, Utc};
+
+    const ONE_DAY_NS: i64 = 86_400_000_000_000;
+    const DAY_ONE: DateTime<Utc> = DateTime::from_timestamp_nanos(0 + ONE_DAY_NS);
+    const DAY_TWO: DateTime<Utc> = DateTime::from_timestamp_nanos(0 + (ONE_DAY_NS * 2));
+    const DAY_THREE: DateTime<Utc> = DateTime::from_timestamp_nanos(0 + (ONE_DAY_NS * 3));
+
+    #[cfg(not(feature = "ordered_logs"))]
+    #[test]
+    fn does_not_order_logs_by_default() {
+        let mut unordered_queue = vec![
+            LogEvent {
+                message: "1".to_string(),
+                timestamp: DAY_ONE,
+            },
+            LogEvent {
+                message: "3".to_string(),
+                timestamp: DAY_THREE,
+            },
+            LogEvent {
+                message: "2".to_string(),
+                timestamp: DAY_TWO,
+            },
+        ];
+        let still_unordered_queue =
+            BatchExporter::<NoopClient>::take_from_queue(&mut unordered_queue);
+
+        let mut still_unordered_queue_iter = still_unordered_queue.iter();
+        assert_eq!(
+            DAY_ONE,
+            still_unordered_queue_iter.next().unwrap().timestamp
+        );
+        assert_eq!(
+            DAY_THREE,
+            still_unordered_queue_iter.next().unwrap().timestamp
+        );
+        assert_eq!(
+            DAY_TWO,
+            still_unordered_queue_iter.next().unwrap().timestamp
+        );
+    }
+
+    #[cfg(feature = "ordered_logs")]
+    mod ordering {
+        use super::*;
+
+        fn assert_is_ordered(logs: Vec<LogEvent>) {
+            let mut last_timestamp = DateTime::from_timestamp_nanos(0);
+
+            for log in logs {
+                assert!(
+                    log.timestamp > last_timestamp,
+                    "Not true: {} > {}",
+                    log.timestamp,
+                    last_timestamp
+                );
+                last_timestamp = log.timestamp;
+            }
+        }
+
+        #[test]
+        fn orders_logs_when_enabled() {
+            let mut unordered_queue = vec![
+                LogEvent {
+                    message: "1".to_string(),
+                    timestamp: DAY_ONE,
+                },
+                LogEvent {
+                    message: "3".to_string(),
+                    timestamp: DAY_THREE,
+                },
+                LogEvent {
+                    message: "2".to_string(),
+                    timestamp: DAY_TWO,
+                },
+            ];
+            let ordered_queue = BatchExporter::<NoopClient>::take_from_queue(&mut unordered_queue);
+            assert_is_ordered(ordered_queue);
         }
     }
 }

@@ -14,6 +14,7 @@ default = []
 rusoto = ["rusoto_logs/default", "rusoto_core/default"]
 rusoto_rustls = ["rusoto_logs/rustls", "rusoto_core/rustls"]
 awssdk = ["aws-sdk-cloudwatchlogs"]
+ordered_logs = []
 
 [dependencies]
 anyhow = "1.0"

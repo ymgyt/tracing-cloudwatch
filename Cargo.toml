@@ -23,7 +23,7 @@ aws-sdk-cloudwatchlogs = { version = "1", default-features = false, optional = t
 chrono = "0.4"
 rusoto_core = { version = "0.48", default-features = false, optional = true }
 rusoto_logs = { version = "0.48", default-features = false, optional = true }
-thiserror = "1.0"
+thiserror = "2.0"
 tokio = { version = "1", features = ["rt", "sync", "time", "macros"] }
 tracing = { version = "0.1", default-features = false, features = ["std"] }
 tracing-core = "0.1"

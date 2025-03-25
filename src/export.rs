@@ -127,7 +127,7 @@ where
                     };
 
                     queue.push(event);
-                    if queue.len() < <NonZero<usize> as Into<usize>>::into(config.batch_size) {
+                    if queue.len() < <NonZeroUsize as Into<usize>>::into(config.batch_size) {
                         continue
                     }
                 }

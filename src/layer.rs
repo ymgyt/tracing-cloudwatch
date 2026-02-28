@@ -12,6 +12,7 @@ use crate::{
     client::CloudWatchClient,
     dispatch::{CloudWatchDispatcher, Dispatcher, NoopDispatcher},
     export::ExportConfig,
+    guard::CloudWatchWorkerGuard,
 };
 
 /// An AWS Cloudwatch propagation layer.
@@ -89,15 +90,29 @@ where
         self,
         client: Client,
         export_config: ExportConfig,
-    ) -> CloudWatchLayer<S, CloudWatchDispatcher, N, E>
+    ) -> (
+        CloudWatchLayer<S, CloudWatchDispatcher, N, E>,
+        CloudWatchWorkerGuard,
+    )
     where
         Client: CloudWatchClient + Send + Sync + 'static,
     {
-        CloudWatchLayer {
-            fmt_layer: self
-                .fmt_layer
-                .with_writer(Arc::new(CloudWatchDispatcher::new(client, export_config))),
-        }
+        let (shutdown_tx, shutdown_rx) = tokio::sync::mpsc::channel(1);
+
+        let guard = CloudWatchWorkerGuard::new(shutdown_tx);
+
+        (
+            CloudWatchLayer {
+                fmt_layer: self
+                    .fmt_layer
+                    .with_writer(Arc::new(CloudWatchDispatcher::new(
+                        client,
+                        export_config,
+                        shutdown_rx,
+                    ))),
+            },
+            guard,
+        )
     }
 
     /// Set the [`fmt::Layer`] provided as an argument.

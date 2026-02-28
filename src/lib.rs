@@ -1,4 +1,4 @@
-//!  tracing-cloudwatch is a custom tracing-subscriber layer that sends your application's tracing events(logs) to AWS CloudWatch Logs.  
+//!  tracing-cloudwatch is a custom tracing-subscriber layer that sends your application's tracing events(logs) to AWS CloudWatch Logs.
 //!
 //! We have supported [rusoto](https://github.com/rusoto/rusoto) and the [AWS SDK](https://github.com/awslabs/aws-sdk-rust) as AWS clients.
 //!
@@ -15,17 +15,17 @@
 //! async fn main() {
 //!     let cw_client = rusoto_logs::CloudWatchLogsClient::new(rusoto_core::Region::ApNortheast1);
 //!
+//!     let (cw_layer, _cw_guard) = tracing_cloudwatch::layer().with_client(
+//!         cw_client,
+//!         tracing_cloudwatch::ExportConfig::default()
+//!             .with_batch_size(5)
+//!             .with_interval(std::time::Duration::from_secs(1))
+//!             .with_log_group_name("tracing-cloudwatch")
+//!             .with_log_stream_name("stream-1"),
+//!     );
+//!
 //!     tracing_subscriber::registry::Registry::default()
-//!         .with(
-//!             tracing_cloudwatch::layer().with_client(
-//!                 cw_client,
-//!                 tracing_cloudwatch::ExportConfig::default()
-//!                     .with_batch_size(5)
-//!                     .with_interval(std::time::Duration::from_secs(1))
-//!                     .with_log_group_name("tracing-cloudwatch")
-//!                     .with_log_stream_name("stream-1"),
-//!             ),
-//!         )
+//!         .with(cw_layer)
 //!         .init();
 //! }
 //! ```
@@ -42,17 +42,17 @@
 //!     let config = aws_config::load_defaults(aws_config::BehaviorVersion::latest()).await;
 //!     let cw_client = aws_sdk_cloudwatchlogs::Client::new(&config);
 //!
+//!     let (cw_layer, _cw_guard) = tracing_cloudwatch::layer().with_client(
+//!         cw_client,
+//!         tracing_cloudwatch::ExportConfig::default()
+//!             .with_batch_size(5)
+//!             .with_interval(std::time::Duration::from_secs(1))
+//!             .with_log_group_name("tracing-cloudwatch")
+//!             .with_log_stream_name("stream-1"),
+//!     );
+//!
 //!     tracing_subscriber::registry::Registry::default()
-//!         .with(
-//!             tracing_cloudwatch::layer().with_client(
-//!                 cw_client,
-//!                 tracing_cloudwatch::ExportConfig::default()
-//!                     .with_batch_size(5)
-//!                     .with_interval(std::time::Duration::from_secs(1))
-//!                     .with_log_group_name("tracing-cloudwatch")
-//!                     .with_log_stream_name("stream-1"),
-//!             ),
-//!         )
+//!         .with(cw_layer)
 //!         .init();
 //! }
 //! ```
@@ -75,8 +75,10 @@
 mod client;
 mod dispatch;
 mod export;
+mod guard;
 mod layer;
 
 pub use client::CloudWatchClient;
 pub use export::{ExportConfig, LogDestination};
+pub use guard::CloudWatchWorkerGuard;
 pub use layer::{layer, CloudWatchLayer};

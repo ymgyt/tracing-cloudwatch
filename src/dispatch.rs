@@ -4,7 +4,10 @@ use crate::{
 };
 
 use chrono::{DateTime, Utc};
-use tokio::sync::mpsc::{self, Receiver, UnboundedSender};
+use tokio::sync::{
+    mpsc::{self, UnboundedSender},
+    oneshot,
+};
 
 pub trait Dispatcher {
     fn dispatch(&self, input: LogEvent);
@@ -33,7 +36,11 @@ pub struct CloudWatchDispatcher {
 }
 
 impl CloudWatchDispatcher {
-    pub(crate) fn new<C>(client: C, export_config: ExportConfig, shutdown_rx: Receiver<()>) -> Self
+    pub(crate) fn new<C>(
+        client: C,
+        export_config: ExportConfig,
+        shutdown_rx: oneshot::Receiver<()>,
+    ) -> Self
     where
         C: CloudWatchClient + Send + Sync + 'static,
     {

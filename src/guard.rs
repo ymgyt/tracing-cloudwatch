@@ -1,9 +1,4 @@
-use std::time::Duration;
-
-use tokio::{
-    runtime::Handle,
-    sync::mpsc::{error::SendTimeoutError, Sender},
-};
+use tokio::sync::oneshot;
 
 /// Guard returned when creating a CloudWatch layer
 ///
@@ -14,29 +9,24 @@ use tokio::{
 /// This is used to ensure buffered logs are flushed on panic
 /// or graceful shutdown.
 pub struct CloudWatchWorkerGuard {
-    shutdown_tx: Sender<()>,
+    shutdown_tx: Option<oneshot::Sender<()>>,
 }
 
 impl CloudWatchWorkerGuard {
-    pub(crate) fn new(shutdown_tx: Sender<()>) -> Self {
-        Self { shutdown_tx }
+    pub(crate) fn new(shutdown_tx: oneshot::Sender<()>) -> Self {
+        Self {
+            shutdown_tx: Some(shutdown_tx),
+        }
     }
 }
 
 impl Drop for CloudWatchWorkerGuard {
     fn drop(&mut self) {
-        let handle = Handle::current();
+        let shutdown_tx = match self.shutdown_tx.take() {
+            Some(value) => value,
+            None => return,
+        };
 
-        match handle.block_on(
-            self.shutdown_tx
-                .send_timeout((), Duration::from_millis(1000)),
-        ) {
-            Ok(_) => {}
-            Err(SendTimeoutError::Closed(_)) => (),
-            Err(SendTimeoutError::Timeout(e)) => eprintln!(
-                "Failed to send shutdown signal to logging worker. Error: {:?}",
-                e
-            ),
-        }
+        _ = shutdown_tx.send(());
     }
 }

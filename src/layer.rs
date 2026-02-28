@@ -97,7 +97,7 @@ where
     where
         Client: CloudWatchClient + Send + Sync + 'static,
     {
-        let (shutdown_tx, shutdown_rx) = tokio::sync::mpsc::channel(1);
+        let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel();
 
         let guard = CloudWatchWorkerGuard::new(shutdown_tx);
 

@@ -3,7 +3,7 @@ use std::num::NonZeroUsize;
 use std::time::Duration;
 
 use tokio::{
-    sync::mpsc::{Receiver, UnboundedReceiver},
+    sync::{mpsc::UnboundedReceiver, oneshot},
     time::interval,
 };
 
@@ -111,7 +111,7 @@ where
     pub(crate) async fn run(
         mut self,
         mut rx: UnboundedReceiver<LogEvent>,
-        mut shutdown_rx: Receiver<()>,
+        mut shutdown_rx: oneshot::Receiver<()>,
     ) {
         let mut interval = interval(self.config.interval);
 
@@ -133,7 +133,7 @@ where
                     }
                 }
 
-                _ = shutdown_rx.recv() => {
+                _ = &mut shutdown_rx => {
                     self.flush().await;
                     break;
                 }

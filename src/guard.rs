@@ -5,6 +5,14 @@ use tokio::{
     sync::mpsc::{error::SendTimeoutError, Sender},
 };
 
+/// Guard returned when creating a CloudWatch layer
+///
+/// When this guard is dropped a shutdown signal will be
+/// sent to the CloudWatch logging worker to flush logs and
+/// stop processing any more logs.
+///
+/// This is used to ensure buffered logs are flushed on panic
+/// or graceful shutdown.
 pub struct CloudWatchWorkerGuard {
     shutdown_tx: Sender<()>,
 }

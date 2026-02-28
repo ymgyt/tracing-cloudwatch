@@ -33,7 +33,7 @@ impl Drop for CloudWatchWorkerGuard {
         ) {
             Ok(_) => {}
             Err(SendTimeoutError::Closed(_)) => (),
-            Err(SendTimeoutError::Timeout(e)) => println!(
+            Err(SendTimeoutError::Timeout(e)) => eprintln!(
                 "Failed to send shutdown signal to logging worker. Error: {:?}",
                 e
             ),

@@ -1,4 +1,4 @@
-//!  tracing-cloudwatch is a custom tracing-subscriber layer that sends your application's tracing events(logs) to AWS CloudWatch Logs.  
+//!  tracing-cloudwatch is a custom tracing-subscriber layer that sends your application's tracing events(logs) to AWS CloudWatch Logs.
 //!
 //! We have supported [rusoto](https://github.com/rusoto/rusoto) and the [AWS SDK](https://github.com/awslabs/aws-sdk-rust) as AWS clients.
 //!
@@ -78,6 +78,6 @@ mod export;
 mod layer;
 
 pub use client::CloudWatchClient;
-pub use dispatch::{CloudWatchDispatcher, Dispatcher, NoopDispatcher};
+pub use dispatch::{CloudWatchDispatcher, NoopDispatcher};
 pub use export::{ExportConfig, LogDestination};
 pub use layer::{layer, CloudWatchLayer};

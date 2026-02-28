@@ -3,33 +3,20 @@ on:
   pull_request:
     types: ["opened", "synchronize"]
 
+permissions:
+  contents: read
+  actions: write
+
 jobs:
   check:
     name: check
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          target/
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-
+    - uses: actions/checkout@v5
     - uses: dtolnay/rust-toolchain@stable
-    - uses: davidB/rust-cargo-make@v1
-    - uses: actions-rs/install@master
+    - uses: Swatinem/rust-cache@v2
+    - uses: taiki-e/install-action@v2
       with:
-        crate: cargo-sort
-        use-tool-cache: true
-    - uses: actions-rs/install@master
-      with:
-        crate: cargo-nextest
-        use-tool-cache: true
+        tool: cargo-make,cargo-sort,cargo-nextest
     - run: cargo make lint
     - run: cargo make test
-    

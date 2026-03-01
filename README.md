@@ -4,6 +4,16 @@ tracing-cloudwatch is a custom tracing-subscriber layer that sends your applicat
 
 We have supported [rusoto](https://github.com/rusoto/rusoto) and the [AWS SDK](https://github.com/awslabs/aws-sdk-rust) as AWS clients.
 
+## Features
+
+| Feature         | Description                                             | Notes                                                              |
+|-----------------|---------------------------------------------------------|--------------------------------------------------------------------|
+| `awssdk`        | Enable the AWS SDK v1 backend.                          | Turns on optional dependency `aws-sdk-cloudwatchlogs`.             |
+| `rusoto`        | Enable the Rusoto backend (default transport settings). | Mutually exclusive with `rusoto_rustls`.                           |
+| `rusoto_rustls` | Enable the Rusoto backend with `rustls`.                | Mutually exclusive with `rusoto`.                                  |
+| `ordered_logs`  | Sort logs by timestamp before sending each batch.       | Helps avoid CloudWatch ordering errors, with extra per-batch work. |
+
+
 ## Usage
 
 ### With AWS SDK

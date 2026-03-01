@@ -117,7 +117,7 @@ where
 
     /// Set the [`fmt::Layer`] provided as an argument.
     /// You can control the log format for CloudWatch by setting a pre-configured [`fmt::Layer`]
-    /// However, the specification of the writer will be overrided.
+    /// However, the writer configuration will be overridden.
     pub fn with_fmt_layer<N2, E2, W>(
         self,
         fmt_layer: fmt::Layer<S, N2, E2, W>,

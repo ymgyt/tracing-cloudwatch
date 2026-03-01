@@ -40,7 +40,7 @@ async fn main() {
 
 #### Chronological order
 
-When aggregating logs from multiple places (or integrations such as [tracing-gstreamer](https://crates.io/crates/tracing-gstreamer)), messages can become unordered. This causes a `InvalidParameterException: Log events in a single PutLogEvents request must be in chronological order.` error from the CloudWatch client. To mediate this, you may enable the `ordered_logs` feature. Take into consideration that this can possibly increase processing time significantly depending on the number of events in the batch. Your milage may vary!
+When aggregating logs from multiple places (or integrations such as [tracing-gstreamer](https://crates.io/crates/tracing-gstreamer)), messages can become unordered. This causes a `InvalidParameterException: Log events in a single PutLogEvents request must be in chronological order.` error from the CloudWatch client. To mediate this, you may enable the `ordered_logs` feature. Take into consideration that this can possibly increase processing time significantly depending on the number of events in the batch. Your mileage may vary!
 
 There is some additional context in https://github.com/ymgyt/tracing-cloudwatch/issues/40
 
@@ -75,7 +75,7 @@ async fn main() {
 }
 ```
 
-### Using pre-configured `tracing_subsriber::fmt::Layer`
+### Using pre-configured `tracing_subscriber::fmt::Layer`
 
 You can specify a pre-configured [`fmt::Layer`](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/fmt/struct.Layer.html) to control the log format.
 For example, the following example outputs the logs in JSON format.

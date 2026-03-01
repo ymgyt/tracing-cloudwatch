@@ -8,7 +8,9 @@
 //!
 //! feature `rusoto` required
 //!
-//! ```rust
+//! ```rust,no_run
+//! # #[cfg(feature = "rusoto")]
+//! # {
 //! use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 //!
 //! #[tokio::main]
@@ -28,13 +30,16 @@
 //!         .with(cw_layer)
 //!         .init();
 //! }
+//! # }
 //! ```
 //!
 //! ### With AWS SDK
 //!
 //! feature `awssdk` required
 //!
-//! ```rust
+//! ```rust,no_run
+//! # #[cfg(feature = "awssdk")]
+//! # {
 //! use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 //!
 //! #[tokio::main]
@@ -55,6 +60,7 @@
 //!         .with(cw_layer)
 //!         .init();
 //! }
+//! # }
 //! ```
 //!
 //! ## Required Permissions

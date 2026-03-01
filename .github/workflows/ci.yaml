@@ -17,6 +17,5 @@ jobs:
     - uses: Swatinem/rust-cache@v2
     - uses: taiki-e/install-action@v2
       with:
-        tool: cargo-make,cargo-sort,cargo-nextest
-    - run: cargo make lint
-    - run: cargo make test
+        tool: just,cargo-sort,cargo-hack
+    - run: just check

@@ -103,6 +103,14 @@ This crate does not create a log group and log stream, so if the specified log g
 We haven't implemented any custom retry logic or timeout settings within the crate. We assume that these configurations are handled through the SDK Client.  
 For instance, in the AWS SDK, you can set up these configurations using [`timeout_config`](https://docs.rs/aws-sdk-cloudwatchlogs/0.28.0/aws_sdk_cloudwatchlogs/config/struct.Builder.html#method.timeout_config) and [`retry_config`](https://docs.rs/aws-sdk-cloudwatchlogs/0.28.0/aws_sdk_cloudwatchlogs/config/struct.Builder.html#method.retry_config)
 
+## Development
+
+This repository uses [`just`](https://github.com/casey/just) as a task runner.
+
+```sh
+just check
+```
+
 ## License
 
 This project is licensed under the [MIT license.](./LICENSE)

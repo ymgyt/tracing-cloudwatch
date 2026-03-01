@@ -12,7 +12,7 @@ use crate::{dispatch::LogEvent, export::LogDestination};
 #[async_trait]
 pub trait CloudWatchClient {
     async fn put_logs(&self, dest: LogDestination, logs: Vec<LogEvent>)
-        -> Result<(), PutLogsError>;
+    -> Result<(), PutLogsError>;
 }
 
 #[derive(Debug, thiserror::Error)]

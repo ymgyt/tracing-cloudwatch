@@ -1,7 +1,7 @@
 use crate::{
+    CloudWatchClient,
     export::{BatchExporter, ExportConfig},
     guard::ShutdownSignal,
-    CloudWatchClient,
 };
 
 use chrono::{DateTime, Utc};

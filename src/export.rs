@@ -7,7 +7,7 @@ use tokio::{
     time::interval,
 };
 
-use crate::{client::NoopClient, dispatch::LogEvent, guard::ShutdownSignal, CloudWatchClient};
+use crate::{CloudWatchClient, client::NoopClient, dispatch::LogEvent, guard::ShutdownSignal};
 
 /// Configurations to control the behavior of exporting logs to CloudWatch.
 #[derive(Debug, Clone)]
@@ -377,12 +377,16 @@ mod tests {
 
         let messages = client.exported_messages();
         assert_eq!(messages.len(), 2);
-        assert!(messages
-            .iter()
-            .any(|message| message.contains("integration-log-1")));
-        assert!(messages
-            .iter()
-            .any(|message| message.contains("integration-log-2")));
+        assert!(
+            messages
+                .iter()
+                .any(|message| message.contains("integration-log-1"))
+        );
+        assert!(
+            messages
+                .iter()
+                .any(|message| message.contains("integration-log-2"))
+        );
     }
 
     #[tokio::test(flavor = "current_thread")]

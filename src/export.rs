@@ -2,7 +2,10 @@ use std::fmt::Debug;
 use std::num::NonZeroUsize;
 use std::time::Duration;
 
-use tokio::{sync::mpsc::UnboundedReceiver, time::interval};
+use tokio::{
+    sync::{mpsc::UnboundedReceiver, oneshot},
+    time::interval,
+};
 
 use crate::{client::NoopClient, dispatch::LogEvent, CloudWatchClient};
 
@@ -105,19 +108,17 @@ impl<C> BatchExporter<C>
 where
     C: CloudWatchClient + Send + Sync + 'static,
 {
-    pub(crate) async fn run(self, mut rx: UnboundedReceiver<LogEvent>) {
-        let BatchExporter {
-            client,
-            mut queue,
-            config,
-        } = self;
-
-        let mut interval = interval(config.interval);
+    pub(crate) async fn run(
+        mut self,
+        mut rx: UnboundedReceiver<LogEvent>,
+        mut shutdown_rx: oneshot::Receiver<()>,
+    ) {
+        let mut interval = interval(self.config.interval);
 
         loop {
             tokio::select! {
                  _ = interval.tick() => {
-                    if queue.is_empty() {
+                    if self.queue.is_empty() {
                         continue;
                     }
                 }
@@ -126,21 +127,38 @@ where
                         break;
                     };
 
-                    queue.push(event);
-                    if queue.len() < <NonZeroUsize as Into<usize>>::into(config.batch_size) {
+                    self.queue.push(event);
+                    if self.queue.len() < <NonZeroUsize as Into<usize>>::into(self.config.batch_size) {
                         continue
                     }
                 }
+
+                _ = &mut shutdown_rx => {
+                    self.flush().await;
+                    break;
+                }
             }
 
-            let logs: Vec<LogEvent> = Self::take_from_queue(&mut queue);
+            self.flush().await;
+        }
+    }
 
-            if let Err(err) = client.put_logs(config.destination.clone(), logs).await {
-                eprintln!(
-                    "[tracing-cloudwatch] Unable to put logs to cloudwatch. Error: {err:?} {:?}",
-                    config.destination
-                );
-            }
+    async fn flush(&mut self) {
+        let logs: Vec<LogEvent> = Self::take_from_queue(&mut self.queue);
+
+        if logs.is_empty() {
+            return;
+        }
+
+        if let Err(err) = self
+            .client
+            .put_logs(self.config.destination.clone(), logs)
+            .await
+        {
+            eprintln!(
+                "[tracing-cloudwatch] Unable to put logs to cloudwatch. Error: {err:?} {:?}",
+                self.config.destination
+            );
         }
     }
 

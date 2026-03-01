@@ -18,19 +18,20 @@ async fn main() {
     let config = aws_config::load_defaults(aws_config::BehaviorVersion::latest()).await;
     let cw_client = aws_sdk_cloudwatchlogs::Client::new(&config);
 
+    let (cw_layer, _cw_guard) = tracing_cloudwatch::layer()
+        .with_code_location(true)
+        .with_target(false)
+        .with_client(
+            cw_client,
+            tracing_cloudwatch::ExportConfig::default()
+                .with_batch_size(5)
+                .with_interval(std::time::Duration::from_secs(1))
+                .with_log_group_name("tracing-cloudwatch")
+                .with_log_stream_name("stream-1"),
+        );
+
     tracing_subscriber::registry::Registry::default()
-        .with(
-            tracing_cloudwatch::layer().with_client(
-                cw_client,
-                tracing_cloudwatch::ExportConfig::default()
-                    .with_batch_size(5)
-                    .with_interval(std::time::Duration::from_secs(1))
-                    .with_log_group_name("tracing-cloudwatch")
-                    .with_log_stream_name("stream-1"),
-            )
-            .with_code_location(true)
-            .with_target(false),
-        )
+        .with(cw_layer)
         .init();
 }
 ```
@@ -52,19 +53,20 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 async fn main() {
     let cw_client = rusoto_logs::CloudWatchLogsClient::new(rusoto_core::Region::ApNortheast1);
 
+    let (cw_layer, _cw_guard) = tracing_cloudwatch::layer()
+        .with_code_location(true)
+        .with_target(false)
+        .with_client(
+            cw_client,
+            tracing_cloudwatch::ExportConfig::default()
+                .with_batch_size(5)
+                .with_interval(std::time::Duration::from_secs(1))
+                .with_log_group_name("tracing-cloudwatch")
+                .with_log_stream_name("stream-1"),
+        );
+
     tracing_subscriber::registry::Registry::default()
-        .with(
-            tracing_cloudwatch::layer().with_client(
-                cw_client,
-                tracing_cloudwatch::ExportConfig::default()
-                    .with_batch_size(5)
-                    .with_interval(std::time::Duration::from_secs(1))
-                    .with_log_group_name("tracing-cloudwatch")
-                    .with_log_stream_name("stream-1"),
-            )
-            .with_code_location(true)
-            .with_target(false),
-        )
+        .with(cw_layer)
         .init();
 }
 ```

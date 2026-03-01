@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
-use tracing_core::{span, Event, Subscriber};
+use tracing_core::{Event, Subscriber, span};
 use tracing_subscriber::{
-    fmt::{self, format, MakeWriter},
+    Layer,
+    fmt::{self, MakeWriter, format},
     layer::Context,
     registry::LookupSpan,
-    Layer,
 };
 
 use crate::{

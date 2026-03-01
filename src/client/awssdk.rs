@@ -1,9 +1,9 @@
 use async_trait::async_trait;
 use aws_sdk_cloudwatchlogs::{
+    Client as SdkClient,
     error::{BuildError, SdkError},
     operation::put_log_events::PutLogEventsError,
     types::InputLogEvent,
-    Client as SdkClient,
 };
 
 use crate::{

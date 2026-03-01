@@ -73,7 +73,7 @@ impl Drop for CloudWatchWorkerGuard {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tokio::time::{sleep, Duration};
+    use tokio::time::{Duration, sleep};
 
     #[tokio::test(flavor = "current_thread")]
     async fn shutdown_waits_for_ack() {

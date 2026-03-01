@@ -92,4 +92,4 @@ pub use client::CloudWatchClient;
 pub use dispatch::{CloudWatchDispatcher, NoopDispatcher};
 pub use export::{ExportConfig, LogDestination};
 pub use guard::CloudWatchWorkerGuard;
-pub use layer::{layer, CloudWatchLayer};
+pub use layer::{CloudWatchLayer, layer};

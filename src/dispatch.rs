@@ -1,5 +1,6 @@
 use crate::{
     export::{BatchExporter, ExportConfig},
+    guard::ShutdownSignal,
     CloudWatchClient,
 };
 
@@ -39,7 +40,7 @@ impl CloudWatchDispatcher {
     pub(crate) fn new<C>(
         client: C,
         export_config: ExportConfig,
-        shutdown_rx: oneshot::Receiver<()>,
+        shutdown_rx: oneshot::Receiver<ShutdownSignal>,
     ) -> Self
     where
         C: CloudWatchClient + Send + Sync + 'static,
@@ -56,9 +57,9 @@ impl CloudWatchDispatcher {
 
 impl Dispatcher for CloudWatchDispatcher {
     fn dispatch(&self, event: LogEvent) {
-        self.tx
-            .send(event)
-            .expect("Unable to send log event. This is a bug");
+        // The exporter can already be shutting down when late logs arrive.
+        // Drop them instead of panicking the application.
+        let _ = self.tx.send(event);
     }
 }
 

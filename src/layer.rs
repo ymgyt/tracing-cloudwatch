@@ -12,7 +12,7 @@ use crate::{
     client::CloudWatchClient,
     dispatch::{CloudWatchDispatcher, Dispatcher, NoopDispatcher},
     export::ExportConfig,
-    guard::CloudWatchWorkerGuard,
+    guard::{CloudWatchWorkerGuard, ShutdownSignal},
 };
 
 /// An AWS Cloudwatch propagation layer.
@@ -97,7 +97,7 @@ where
     where
         Client: CloudWatchClient + Send + Sync + 'static,
     {
-        let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel();
+        let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel::<ShutdownSignal>();
 
         let guard = CloudWatchWorkerGuard::new(shutdown_tx);
 

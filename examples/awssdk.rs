@@ -7,7 +7,7 @@ async fn main() {
     let config = aws_config::load_defaults(BehaviorVersion::latest()).await;
     let cw_client = aws_sdk_cloudwatchlogs::Client::new(&config);
 
-    let (cw_layer, _cw_guard) = tracing_cloudwatch::layer()
+    let (cw_layer, cw_guard) = tracing_cloudwatch::layer()
         .with_code_location(true)
         .with_target(false)
         .with_client(
@@ -28,11 +28,13 @@ async fn main() {
     start().await;
 
     tokio::time::sleep(Duration::from_secs(10)).await;
+    cw_guard.shutdown().await;
 }
 
 #[cfg(not(feature = "awssdk"))]
 fn main() {}
 
+#[cfg(feature = "awssdk")]
 #[tracing::instrument()]
 async fn start() {
     tracing::info!("Starting...");

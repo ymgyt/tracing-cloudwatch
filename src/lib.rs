@@ -17,7 +17,7 @@
 //! async fn main() {
 //!     let cw_client = rusoto_logs::CloudWatchLogsClient::new(rusoto_core::Region::ApNortheast1);
 //!
-//!     let (cw_layer, _cw_guard) = tracing_cloudwatch::layer().with_client(
+//!     let (cw_layer, cw_guard) = tracing_cloudwatch::layer().with_client(
 //!         cw_client,
 //!         tracing_cloudwatch::ExportConfig::default()
 //!             .with_batch_size(5)
@@ -29,6 +29,8 @@
 //!     tracing_subscriber::registry::Registry::default()
 //!         .with(cw_layer)
 //!         .init();
+//!
+//!     cw_guard.shutdown().await;
 //! }
 //! # }
 //! ```
@@ -47,7 +49,7 @@
 //!     let config = aws_config::load_defaults(aws_config::BehaviorVersion::latest()).await;
 //!     let cw_client = aws_sdk_cloudwatchlogs::Client::new(&config);
 //!
-//!     let (cw_layer, _cw_guard) = tracing_cloudwatch::layer().with_client(
+//!     let (cw_layer, cw_guard) = tracing_cloudwatch::layer().with_client(
 //!         cw_client,
 //!         tracing_cloudwatch::ExportConfig::default()
 //!             .with_batch_size(5)
@@ -59,6 +61,8 @@
 //!     tracing_subscriber::registry::Registry::default()
 //!         .with(cw_layer)
 //!         .init();
+//!
+//!     cw_guard.shutdown().await;
 //! }
 //! # }
 //! ```

@@ -18,7 +18,7 @@ async fn main() {
     let config = aws_config::load_defaults(aws_config::BehaviorVersion::latest()).await;
     let cw_client = aws_sdk_cloudwatchlogs::Client::new(&config);
 
-    let (cw_layer, _cw_guard) = tracing_cloudwatch::layer()
+    let (cw_layer, cw_guard) = tracing_cloudwatch::layer()
         .with_code_location(true)
         .with_target(false)
         .with_client(
@@ -33,6 +33,8 @@ async fn main() {
     tracing_subscriber::registry::Registry::default()
         .with(cw_layer)
         .init();
+
+    cw_guard.shutdown().await;
 }
 ```
 
@@ -53,7 +55,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 async fn main() {
     let cw_client = rusoto_logs::CloudWatchLogsClient::new(rusoto_core::Region::ApNortheast1);
 
-    let (cw_layer, _cw_guard) = tracing_cloudwatch::layer()
+    let (cw_layer, cw_guard) = tracing_cloudwatch::layer()
         .with_code_location(true)
         .with_target(false)
         .with_client(
@@ -68,6 +70,8 @@ async fn main() {
     tracing_subscriber::registry::Registry::default()
         .with(cw_layer)
         .init();
+
+    cw_guard.shutdown().await;
 }
 ```
 

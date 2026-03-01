@@ -6,7 +6,7 @@ async fn main() {
     use tracing_subscriber::{filter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
     let cw_client = rusoto_logs::CloudWatchLogsClient::new(Region::ApNortheast1);
 
-    let (cw_layer, _cw_guard) = tracing_cloudwatch::layer().with_client(
+    let (cw_layer, cw_guard) = tracing_cloudwatch::layer().with_client(
         cw_client,
         tracing_cloudwatch::ExportConfig::default()
             .with_batch_size(1)
@@ -24,11 +24,13 @@ async fn main() {
     start().await;
 
     tokio::time::sleep(Duration::from_secs(5)).await;
+    cw_guard.shutdown().await;
 }
 
 #[cfg(all(not(feature = "rusoto"), not(feature = "rusoto_rustls")))]
 fn main() {}
 
+#[cfg(any(feature = "rusoto", feature = "rusoto_rustls"))]
 #[tracing::instrument()]
 async fn start() {
     tracing::info!("Starting...");

@@ -16,11 +16,11 @@ pub struct ExportConfig {
     batch_size: NonZeroUsize,
     /// The interval for putting logs.
     interval: Duration,
-    /// To which logs sended.
+    /// Where logs are sent.
     destination: LogDestination,
 }
 
-/// To which logs to sended.
+/// Where logs are sent.
 #[derive(Debug, Clone, Default)]
 pub struct LogDestination {
     /// The name of the log group.

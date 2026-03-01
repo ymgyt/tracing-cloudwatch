@@ -4,7 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.4.0] - 2026-03-01
+
+### Breaking
+- `CloudWatchLayer::with_client` now returns a tuple `(CloudWatchLayer, CloudWatchWorkerGuard)` instead of returning only the layer. https://github.com/ymgyt/tracing-cloudwatch/pull/52
+  Existing call sites must keep the returned guard alive, and should call `cw_guard.shutdown().await` for graceful shutdown.
+
+### Added
+- Add `CloudWatchWorkerGuard::shutdown()` to explicitly wait for exporter drain + flush completion. https://github.com/ymgyt/tracing-cloudwatch/pull/55
+
+### Changed
+  - migrate crate edition from 2021 to 2024 (requires a newer Rust toolchain)
+  https://github.com/ymgyt/tracing-cloudwatch/pull/58
 
 ## [0.3.1] - 2025-03-25
 ### Fixed
@@ -41,4 +52,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2023-05-06
 ### Added
 - crate published
-

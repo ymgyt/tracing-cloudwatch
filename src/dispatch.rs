@@ -9,6 +9,7 @@ use tokio::sync::{
     mpsc::{self, UnboundedSender},
     oneshot,
 };
+use tracing::instrument::WithSubscriber;
 
 pub trait Dispatcher {
     fn dispatch(&self, input: LogEvent);
@@ -49,7 +50,13 @@ impl CloudWatchDispatcher {
         let (tx, rx) = mpsc::unbounded_channel();
         let exporter = BatchExporter::new(client, export_config);
 
-        tokio::spawn(exporter.run(rx, shutdown_rx));
+        tokio::spawn(
+            exporter
+                .run(rx, shutdown_rx)
+                // Override the subscriber for the exporter to prevent recursively
+                // tracing new events from sdk calls within the exporter
+                .with_subscriber(tracing::dispatcher::Dispatch::none()),
+        );
 
         Self { tx }
     }

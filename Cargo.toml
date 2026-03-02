@@ -1,7 +1,7 @@
 [package]
 name = "tracing-cloudwatch"
 edition = "2024"
-version = "0.4.0"
+version = "0.4.1"
 license = "MIT"
 description = "tracing-subscriber layer that sends your application's tracing events(logs) to AWS CloudWatch Logs"
 repository = "https://github.com/ymgyt/tracing-cloudwatch"

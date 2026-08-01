@@ -15,7 +15,7 @@ jobs:
     - uses: actions/checkout@v5
     - uses: dtolnay/rust-toolchain@stable
     - uses: Swatinem/rust-cache@v2
-    - uses: taiki-e/install-action@v2
+    - uses: taiki-e/install-action@v2.85.4
       with:
         tool: just,cargo-sort,cargo-hack
     - run: just check

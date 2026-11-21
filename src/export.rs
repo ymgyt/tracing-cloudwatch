@@ -114,11 +114,12 @@ where
         mut shutdown_rx: oneshot::Receiver<ShutdownSignal>,
     ) {
         let mut interval = interval(self.config.interval);
+        let mut draining = false;
         let mut shutdown_signal = None;
 
         loop {
             tokio::select! {
-                 _ = interval.tick() => {
+                _ = interval.tick(), if !draining => {
                     if self.queue.is_empty() {
                         continue;
                     }
@@ -130,19 +131,16 @@ where
                     };
 
                     self.queue.push(event);
-                    if self.queue.len() < <NonZeroUsize as Into<usize>>::into(self.config.batch_size) {
-                        continue
+                    if self.queue.len() < self.config.batch_size.get() {
+                        continue;
                     }
                 }
 
-                received_shutdown = &mut shutdown_rx => {
-                    if let Ok(signal) = received_shutdown {
-                        shutdown_signal = Some(signal);
-                    }
-                    while let Ok(event) = rx.try_recv() {
-                        self.queue.push(event);
-                    }
-                    break;
+                received_shutdown = &mut shutdown_rx, if !draining => {
+                    shutdown_signal = received_shutdown.ok();
+                    rx.close();
+                    draining = true;
+                    continue;
                 }
             }
             self.flush().await;
@@ -195,7 +193,7 @@ mod tests {
 
         #[derive(Clone, Default)]
         pub(super) struct RecordingClient {
-            logs: Arc<Mutex<Vec<LogEvent>>>,
+            batches: Arc<Mutex<Vec<Vec<LogEvent>>>>,
         }
 
         #[async_trait]
@@ -205,21 +203,26 @@ mod tests {
                 _dest: LogDestination,
                 logs: Vec<LogEvent>,
             ) -> Result<(), crate::client::PutLogsError> {
-                self.logs.lock().unwrap().extend(logs);
+                self.batches.lock().unwrap().push(logs);
                 Ok(())
             }
         }
 
         impl RecordingClient {
             pub(super) fn exported_count(&self) -> usize {
-                self.logs.lock().unwrap().len()
+                self.batches.lock().unwrap().iter().map(Vec::len).sum()
+            }
+
+            pub(super) fn batch_sizes(&self) -> Vec<usize> {
+                self.batches.lock().unwrap().iter().map(Vec::len).collect()
             }
 
             pub(super) fn exported_messages(&self) -> Vec<String> {
-                self.logs
+                self.batches
                     .lock()
                     .unwrap()
                     .iter()
+                    .flatten()
                     .map(|event| event.message.clone())
                     .collect()
             }
@@ -319,12 +322,12 @@ mod tests {
         use tracing_subscriber::layer::SubscriberExt;
 
         #[tokio::test(flavor = "current_thread")]
-        async fn drains_all_buffered_events_on_shutdown() {
+        async fn drains_buffered_events_in_batches_on_shutdown() {
             let client = RecordingClient::default();
-            let exporter = BatchExporter::new(
+            let mut exporter = BatchExporter::new(
                 client.clone(),
                 ExportConfig::default()
-                    .with_batch_size(10_000)
+                    .with_batch_size(100)
                     .with_interval(Duration::from_secs(60))
                     .with_log_group_name("group")
                     .with_log_stream_name("stream"),
@@ -332,9 +335,16 @@ mod tests {
 
             let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
             let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel::<ShutdownSignal>();
-            let (shutdown_signal, _ack_rx) = ShutdownSignal::new();
+            let (shutdown_signal, ack_rx) = ShutdownSignal::new();
+            // Consume the initial interval tick before queuing the shutdown backlog.
+            exporter.queue.push(LogEvent {
+                message: "warmup".into(),
+                timestamp: Utc::now(),
+            });
+            let worker = tokio::spawn(exporter.run(rx, shutdown_rx));
+            wait_for_exported_count(&client, 1).await;
 
-            let total = 512;
+            let total = 250;
             for idx in 0..total {
                 tx.send(LogEvent {
                     message: format!("event-{idx}"),
@@ -342,16 +352,13 @@ mod tests {
                 })
                 .unwrap();
             }
-            drop(tx);
             shutdown_tx.send(shutdown_signal).unwrap();
-
-            exporter.run(rx, shutdown_rx).await;
-
-            assert_eq!(
-                client.exported_count(),
-                total,
-                "all events queued before shutdown should be exported"
-            );
+            tokio::time::timeout(Duration::from_secs(1), ack_rx)
+                .await
+                .expect("timed out waiting for shutdown")
+                .unwrap();
+            assert_eq!(client.batch_sizes(), [1, 100, 100, 50]);
+            worker.await.unwrap();
         }
 
         #[tokio::test(flavor = "current_thread")]

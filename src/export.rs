@@ -114,12 +114,11 @@ where
         mut shutdown_rx: oneshot::Receiver<ShutdownSignal>,
     ) {
         let mut interval = interval(self.config.interval);
-        let mut draining = false;
-        let mut shutdown_signal = None;
-
-        loop {
+        let signal = loop {
             tokio::select! {
-                _ = interval.tick(), if !draining => {
+                received_shutdown = &mut shutdown_rx => break received_shutdown.ok(),
+
+                _ = interval.tick() => {
                     if self.queue.is_empty() {
                         continue;
                     }
@@ -127,7 +126,7 @@ where
 
                 event = rx.recv() => {
                     let Some(event) = event else {
-                        break;
+                        break shutdown_rx.try_recv().ok();
                     };
 
                     self.queue.push(event);
@@ -135,19 +134,40 @@ where
                         continue;
                     }
                 }
-
-                received_shutdown = &mut shutdown_rx, if !draining => {
-                    shutdown_signal = received_shutdown.ok();
-                    rx.close();
-                    draining = true;
-                    continue;
-                }
             }
-            self.flush().await;
+            // A tick or event may have been ready at the same time as shutdown.
+            match shutdown_rx.try_recv() {
+                Ok(signal) => break Some(signal),
+                Err(oneshot::error::TryRecvError::Closed) => break None,
+                Err(oneshot::error::TryRecvError::Empty) => self.flush().await,
+            }
+        };
+        self.drain_on_shutdown(rx).await;
+        if let Some(signal) = signal {
+            signal.ack();
+        }
+    }
+
+    async fn drain_on_shutdown(&mut self, mut rx: UnboundedReceiver<LogEvent>) {
+        rx.close();
+
+        let buffered_events = std::mem::take(&mut self.queue);
+        for event in buffered_events {
+            self.push_shutdown_event(event).await;
+        }
+        while let Some(event) = rx.recv().await {
+            self.push_shutdown_event(event).await;
         }
         self.flush().await;
-        if let Some(shutdown_signal) = shutdown_signal {
-            shutdown_signal.ack();
+    }
+
+    async fn push_shutdown_event(&mut self, event: LogEvent) {
+        // CloudWatch Logs accepts at most 10,000 log events per PutLogEvents request.
+        // https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutLogEvents.html
+        const MAX_EVENTS_PER_REQUEST: usize = 10_000;
+        self.queue.push(event);
+        if self.queue.len() == MAX_EVENTS_PER_REQUEST {
+            self.flush().await;
         }
     }
 
@@ -321,13 +341,16 @@ mod tests {
         use tokio::time::sleep;
         use tracing_subscriber::layer::SubscriberExt;
 
-        #[tokio::test(flavor = "current_thread")]
-        async fn drains_buffered_events_in_batches_on_shutdown() {
+        async fn shutdown_batch_sizes(
+            batch_size: usize,
+            buffered: usize,
+            pending: usize,
+        ) -> Vec<usize> {
             let client = RecordingClient::default();
             let mut exporter = BatchExporter::new(
                 client.clone(),
                 ExportConfig::default()
-                    .with_batch_size(100)
+                    .with_batch_size(batch_size)
                     .with_interval(Duration::from_secs(60))
                     .with_log_group_name("group")
                     .with_log_stream_name("stream"),
@@ -336,29 +359,36 @@ mod tests {
             let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
             let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel::<ShutdownSignal>();
             let (shutdown_signal, ack_rx) = ShutdownSignal::new();
-            // Consume the initial interval tick before queuing the shutdown backlog.
-            exporter.queue.push(LogEvent {
-                message: "warmup".into(),
-                timestamp: Utc::now(),
-            });
-            let worker = tokio::spawn(exporter.run(rx, shutdown_rx));
-            wait_for_exported_count(&client, 1).await;
-
-            let total = 250;
-            for idx in 0..total {
-                tx.send(LogEvent {
+            for idx in 0..buffered + pending {
+                let event = LogEvent {
                     message: format!("event-{idx}"),
                     timestamp: Utc::now(),
-                })
-                .unwrap();
+                };
+                if idx < buffered {
+                    exporter.queue.push(event);
+                } else {
+                    tx.send(event).unwrap();
+                }
             }
             shutdown_tx.send(shutdown_signal).unwrap();
+            let worker = tokio::spawn(exporter.run(rx, shutdown_rx));
             tokio::time::timeout(Duration::from_secs(1), ack_rx)
                 .await
                 .expect("timed out waiting for shutdown")
                 .unwrap();
-            assert_eq!(client.batch_sizes(), [1, 100, 100, 50]);
             worker.await.unwrap();
+            client.batch_sizes()
+        }
+
+        #[tokio::test]
+        async fn shutdown_combines_events_beyond_the_configured_batch_size() {
+            assert_eq!(shutdown_batch_sizes(100, 50, 200).await, [250]);
+        }
+
+        #[tokio::test]
+        async fn shutdown_splits_at_the_cloudwatch_event_limit() {
+            assert_eq!(shutdown_batch_sizes(100, 50, 9_951).await, [10_000, 1]);
+            assert_eq!(shutdown_batch_sizes(20_000, 10_001, 0).await, [10_000, 1]);
         }
 
         #[tokio::test(flavor = "current_thread")]

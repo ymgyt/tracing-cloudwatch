@@ -88,18 +88,12 @@ async fn main() {
 ### Using pre-configured `tracing_subscriber::fmt::Layer`
 
 You can specify a pre-configured [`fmt::Layer`](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/fmt/struct.Layer.html) to control the log format.
-For example, the following example outputs the logs in JSON format.
+Given a CloudWatch client and an `ExportConfig`, this example uses a JSON formatter.
 
 ```rust
-tracing_subscriber::registry::Registry::default()
-    .with(tracing_cloudwatch::layer()
-        .with_fmt_layer(
-            tracing_subscriber::fmt::layer()
-                .json()
-                .without_time()
-        )
-    )
-    .init();
+let (cw_layer, cw_guard) = tracing_cloudwatch::layer()
+    .with_fmt_layer(tracing_subscriber::fmt::layer().json().without_time())
+    .with_client(client, export_config);
 ```
 
 ## Required Permissions
